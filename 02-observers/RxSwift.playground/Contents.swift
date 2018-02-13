@@ -153,6 +153,20 @@ example(of: "challenge 1") {
     )
     .addDisposableTo(disposeBag)
 }
+
+example(of: "challenge 1") {
+    let observable: Observable<Int> = Observable.never()
+    let disposeBag = DisposeBag()
+    observable
+        .debug("id", trimOutput: true)
+        .subscribe(
+            onNext: { print($0) },
+            onError: { print($0) },
+            onCompleted: { print("Completed") },
+            onDisposed: { print("Disposed") }
+        )
+        .addDisposableTo(disposeBag)
+}
 /*:
  Copyright (c) 2014-2016 Razeware LLC
  
