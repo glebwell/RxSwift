@@ -122,6 +122,116 @@ example(of: "Variable") {
 
     variable.value = "2"
 }
+
+example(of: "challenge 1") {
+
+    let disposeBag = DisposeBag()
+
+    let dealtHand = PublishSubject<[(String, Int)]>()
+
+    func deal(_ cardCount: UInt) {
+        var deck = cards
+        var cardsRemaining: UInt32 = 52
+        var hand = [(String, Int)]()
+
+        for _ in 0..<cardCount {
+            let randomIndex = Int(arc4random_uniform(cardsRemaining))
+            hand.append(deck[randomIndex])
+            deck.remove(at: randomIndex)
+            cardsRemaining -= 1
+        }
+
+        // Add code to update dealtHand here
+
+        if points(for: hand) > 21 {
+            dealtHand.onError(HandError.busted)
+        } else {
+            dealtHand.onNext(hand)
+        }
+    }
+
+    // Add subscription to dealtHand here
+    dealtHand
+        .subscribe(onNext: {
+            print(cardString(for: $0), "score: \(points(for: $0))")
+        }, onError: { error in
+            print(error)
+        }, onCompleted: {
+            print("onCompleted")
+        }, onDisposed: {
+            print("onDisposed")
+        })
+        .addDisposableTo(disposeBag)
+
+    deal(3)
+}
+
+example(of: "challenge 2") {
+
+    enum UserSession {
+
+        case loggedIn, loggedOut
+    }
+
+    enum LoginError: Error {
+
+        case invalidCredentials
+    }
+
+    let disposeBag = DisposeBag()
+
+    // Create userSession Variable of type UserSession with initial value of .loggedOut
+    var userSession = Variable(UserSession.loggedOut)
+
+    // Subscribe to receive next events from userSession
+    userSession.asObservable()
+        .subscribe { userSession in
+            print(userSession)
+        }
+        .addDisposableTo(disposeBag)
+
+    func logInWith(username: String, password: String, completion: (Error?) -> Void) {
+        guard username == "johnny@appleseed.com",
+            password == "appleseed"
+            else {
+                completion(LoginError.invalidCredentials)
+                return
+        }
+
+        // Update userSession
+        userSession.value = UserSession.loggedIn
+
+    }
+
+    func logOut() {
+        // Update userSession
+        userSession.value = UserSession.loggedOut
+    }
+
+    func performActionRequiringLoggedInUser(_ action: () -> Void) {
+        // Ensure that userSession is loggedIn and then execute action()
+        if userSession.value == .loggedIn {
+            action()
+        }
+    }
+
+    for i in 1...2 {
+        let password = i % 2 == 0 ? "appleseed" : "password"
+
+        logInWith(username: "johnny@appleseed.com", password: password) { error in
+            guard error == nil else {
+                print(error!)
+                return
+            }
+
+            print("User logged in.")
+        }
+
+        performActionRequiringLoggedInUser {
+            print("Successfully did something only a logged in user can do.")
+        }
+    }
+}
 /*:
  Copyright (c) 2014-2016 Razeware LLC
  
