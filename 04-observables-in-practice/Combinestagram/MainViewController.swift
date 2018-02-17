@@ -30,24 +30,64 @@ class MainViewController: UIViewController {
   @IBOutlet weak var buttonSave: UIButton!
   @IBOutlet weak var itemAdd: UIBarButtonItem!
 
+  private let bag = DisposeBag()
+  private let images = Variable<[UIImage]>([])
+
   override func viewDidLoad() {
     super.viewDidLoad()
-
+    images.asObservable()
+        .subscribe(onNext: { [weak self] photos in
+            self?.updateUI(photos: photos)
+        })
+        .addDisposableTo(bag)
   }
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    print("resources \(RxSwift.Resources.total)")
+  }
+
+  private func updateUI(photos: [UIImage]) {
+    let photosCount = photos.count
+    buttonSave.isEnabled = photosCount > 0 && photosCount % 2 == 0
+    buttonClear.isEnabled = photosCount > 0
+    itemAdd.isEnabled = photosCount < 6
+    title = photosCount > 0 ? "\(photosCount) photos" : "Collage"
+    guard let preview = imagePreview else { return }
+    preview.image = UIImage.collage(images: photos, size: preview.frame.size)
   }
 
   @IBAction func actionClear() {
-
+    images.value = []
   }
 
   @IBAction func actionSave() {
+    guard let image = imagePreview.image else { return }
+
+    PhotoWriter.save(image)
+      .subscribe(onError: { [weak self] error in
+        self?.showMessage("Error", description: error.localizedDescription)
+      }, onCompleted: {[weak self] in
+        self?.showMessage("Saved")
+        self?.actionClear()
+      })
+      .addDisposableTo(bag)
   }
 
   @IBAction func actionAdd() {
+    //images.value.append(UIImage(named: "IMG_1907.jpg")!)
+    let photosViewController = storyboard!.instantiateViewController(
+        withIdentifier: "PhotosViewController") as! PhotosViewController
 
+    photosViewController.selectedPhotos
+      .subscribe(onNext: { [weak self] newImage in
+        guard let images = self?.images else { return }
+        images.value.append(newImage)
+      }, onDisposed: {
+            print("completed photo selection")
+      })
+
+    navigationController!.pushViewController(photosViewController, animated: true)
   }
 
   func showMessage(_ title: String, description: String? = nil) {

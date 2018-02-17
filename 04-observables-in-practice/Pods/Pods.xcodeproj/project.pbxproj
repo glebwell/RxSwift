@@ -1578,7 +1578,7 @@
 			};
 			name = Release;
 		};
-		5B63A0603F3900E469D0E177A9C8AB3A /* Debug */ = {
+		50B3727597C12F34A8ECEED35889D045 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 95524CA0C59637CA7C9626422930E059 /* RxSwift.xcconfig */;
 			buildSettings = {
@@ -1597,6 +1597,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = "Target Support Files/RxSwift/RxSwift.modulemap";
+				OTHER_SWIFT_FLAGS = "-D TRACE_RESOURCES";
 				PRODUCT_NAME = RxSwift;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1710,7 +1711,7 @@
 		077CBE12F52719713BED17D07A7457FB /* Build configuration list for PBXNativeTarget "RxSwift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5B63A0603F3900E469D0E177A9C8AB3A /* Debug */,
+				50B3727597C12F34A8ECEED35889D045 /* Debug */,
 				E2CC5FE1C6AD1065CF20207B61240D08 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
