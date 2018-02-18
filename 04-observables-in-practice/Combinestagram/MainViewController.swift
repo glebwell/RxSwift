@@ -67,7 +67,7 @@ class MainViewController: UIViewController {
     PhotoWriter.save(image)
       .subscribe(onError: { [weak self] error in
         self?.showMessage("Error", description: error.localizedDescription)
-      }, onCompleted: {[weak self] in
+      }, onCompleted: { [weak self] in
         self?.showMessage("Saved")
         self?.actionClear()
       })
@@ -79,7 +79,7 @@ class MainViewController: UIViewController {
     let photosViewController = storyboard!.instantiateViewController(
         withIdentifier: "PhotosViewController") as! PhotosViewController
 
-    photosViewController.selectedPhotos
+    let _ = photosViewController.selectedPhotos
       .subscribe(onNext: { [weak self] newImage in
         guard let images = self?.images else { return }
         images.value.append(newImage)
@@ -91,8 +91,10 @@ class MainViewController: UIViewController {
   }
 
   func showMessage(_ title: String, description: String? = nil) {
-    let alert = UIAlertController(title: title, message: description, preferredStyle: .alert)
-    alert.addAction(UIAlertAction(title: "Close", style: .default, handler: { [weak self] _ in self?.dismiss(animated: true, completion: nil)}))
-    present(alert, animated: true, completion: nil)
+    alert(title, description: description)
+      .subscribe(onCompleted: { [weak self] in
+        self?.dismiss(animated: true, completion: nil)
+      })
+      .addDisposableTo(bag)
   }
 }

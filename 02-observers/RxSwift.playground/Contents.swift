@@ -154,7 +154,7 @@ example(of: "challenge 1") {
     .addDisposableTo(disposeBag)
 }
 
-example(of: "challenge 1") {
+example(of: "challenge 2") {
     let observable: Observable<Int> = Observable.never()
     let disposeBag = DisposeBag()
     observable
