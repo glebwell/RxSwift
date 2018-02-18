@@ -30,6 +30,8 @@ class PhotosViewController: UICollectionViewController {
   var selectedPhotos: Observable<UIImage> {
     return selectedPhotosSubject.asObservable()
   }
+  
+  let bag = DisposeBag()
   // MARK: private properties
 
   private lazy var photos = PhotosViewController.loadPhotos()
