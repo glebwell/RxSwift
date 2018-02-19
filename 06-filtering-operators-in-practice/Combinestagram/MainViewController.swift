@@ -32,10 +32,22 @@ class MainViewController: UIViewController {
 
   private let bag = DisposeBag()
   private let images = Variable<[UIImage]>([])
+  private var imageCache = [Int]()
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    images.asObservable()
+
+    let sharedImages = images.asObservable().share()
+
+    sharedImages
+      .throttle(0.5, scheduler: MainScheduler.instance)
+      .subscribe(onNext: { [unowned self] photos in
+        self.imagePreview.image = UIImage.collage(images: photos,
+                                                  size: self.imagePreview.frame.size)
+      })
+      .addDisposableTo(bag)
+
+    sharedImages
         .subscribe(onNext: { [weak self] photos in
             self?.updateUI(photos: photos)
         })
@@ -53,12 +65,11 @@ class MainViewController: UIViewController {
     buttonClear.isEnabled = photosCount > 0
     itemAdd.isEnabled = photosCount < 6
     title = photosCount > 0 ? "\(photosCount) photos" : "Collage"
-    guard let preview = imagePreview else { return }
-    preview.image = UIImage.collage(images: photos, size: preview.frame.size)
   }
 
   @IBAction func actionClear() {
     images.value = []
+    imageCache = []
   }
 
   @IBAction func actionSave() {
@@ -82,8 +93,19 @@ class MainViewController: UIViewController {
     let newPhotos = photosViewController.selectedPhotos.share()
 
     newPhotos
+      .takeWhile { [weak self] image in
+        return (self?.images.value.count ?? 0) < 6
+      }
       .filter { newImage in
         return newImage.size.width > newImage.size.height
+      }
+      .filter { [weak self] newImage in
+        let len = UIImagePNGRepresentation(newImage)?.count ?? 0
+        guard self?.imageCache.contains(len) == false else {
+          return false
+        }
+        self?.imageCache.append(len)
+        return true
       }
       .subscribe(onNext: { [weak self] newImage in
         guard let images = self?.images else { return }
@@ -104,7 +126,7 @@ class MainViewController: UIViewController {
   }
 
   func showMessage(_ title: String, description: String? = nil) {
-    alert(title, description: description)
+    alert(title: title, description: description)
       .subscribe(onCompleted: { [weak self] in
         self?.dismiss(animated: true, completion: nil)
       })
