@@ -42,6 +42,154 @@ example(of: "mapWithIndex") {
     })
     .addDisposableTo(disposeBag)
 }
+
+struct Student {
+  var score: Variable<Int>
+}
+
+example(of: "flatMap") {
+  let disposeBag = DisposeBag()
+
+  let ryan = Student(score: Variable(80))
+  let charlotte = Student(score: Variable(90))
+
+  let student = PublishSubject<Student>()
+
+  student.asObservable()
+    .flatMap {
+      $0.score.asObservable()
+    }
+    .subscribe(onNext: {
+      print($0)
+    })
+    .addDisposableTo(disposeBag)
+
+  student.onNext(ryan)
+  ryan.score.value = 85
+
+  student.onNext(charlotte)
+  ryan.score.value = 95
+
+  charlotte.score.value = 100
+}
+
+example(of: "flatMapLatest") {
+  let disposeBag = DisposeBag()
+
+  let ryan = Student(score: Variable(80))
+  let charlotte = Student(score: Variable(90))
+
+  let student = PublishSubject<Student>()
+
+  student.asObservable()
+    .flatMapLatest {
+      $0.score.asObservable()
+    }
+    .subscribe(onNext: {
+      print($0)
+    })
+    .addDisposableTo(disposeBag)
+
+  student.onNext(ryan)
+  ryan.score.value = 85
+
+  student.onNext(charlotte)
+
+  ryan.score.value = 95
+  charlotte.score.value = 100
+}
+
+example(of: "challenge 1") {
+
+  let contacts = [
+    "603-555-1212": "Florent",
+    "212-555-1212": "Junior",
+    "408-555-1212": "Marin",
+    "617-555-1212": "Scott"
+  ]
+
+  let convert: (String) -> UInt? = { value in
+    if let number = UInt(value), number < 10 {
+      return number
+    }
+
+    let convert: [String: UInt] = [
+      "abc": 2, "def": 3, "ghi": 4,
+      "jkl": 5, "mno": 6, "pqrs": 7,
+      "tuv": 8, "wxyz": 9
+      ]
+
+    var converted: UInt? = nil
+
+    convert.keys.forEach {
+      print("forEach start")
+      if $0.contains(value.lowercased()) {
+        converted = convert[$0]
+      }
+      print("forEach finish")
+    }
+
+    print("convert was finished")
+    return converted
+  }
+
+  let format: ([UInt]) -> String = {
+    var phone = $0.map(String.init).joined()
+
+    phone.insert("-", at: phone.index(
+      phone.startIndex,
+      offsetBy: 3)
+    )
+
+    phone.insert("-", at: phone.index(
+      phone.startIndex,
+      offsetBy: 7)
+    )
+
+    print("insert was finished")
+    return phone
+  }
+
+  let dial: (String) -> String = {
+    if let contact = contacts[$0] {
+      return "Dialing \(contact) (\($0))..."
+    } else {
+      return "Contact not found"
+    }
+  }
+
+  let disposeBag = DisposeBag()
+
+  let subject = PublishSubject<String>()
+
+  subject.asObservable()
+    .map {
+      return convert($0) ?? 0
+    }
+    .skipWhile { $0 == 0 }
+    .take(10)
+    .toArray()
+    .subscribe(onNext: {
+      print(dial(format($0)))
+    })
+    .addDisposableTo(disposeBag)
+
+  //subject.onNext("603-555-1212")
+
+  let c = convert("a")
+  /*
+  subject.onNext("6")
+  subject.onNext("0")
+  subject.onNext("3")
+  subject.onNext("5")
+  subject.onNext("5")
+  subject.onNext("5")
+  subject.onNext("1")
+  subject.onNext("2")
+  subject.onNext("1")
+  subject.onNext("2")
+ */
+}
 /*:
  Copyright (c) 2014-2016 Razeware LLC
  
