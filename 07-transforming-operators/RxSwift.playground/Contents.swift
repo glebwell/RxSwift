@@ -122,14 +122,10 @@ example(of: "challenge 1") {
     var converted: UInt? = nil
 
     convert.keys.forEach {
-      print("forEach start")
       if $0.contains(value.lowercased()) {
         converted = convert[$0]
       }
-      print("forEach finish")
     }
-
-    print("convert was finished")
     return converted
   }
 
@@ -146,7 +142,6 @@ example(of: "challenge 1") {
       offsetBy: 7)
     )
 
-    print("insert was finished")
     return phone
   }
 
@@ -160,35 +155,36 @@ example(of: "challenge 1") {
 
   let disposeBag = DisposeBag()
 
-  let subject = PublishSubject<String>()
+  let subject = Variable<String>("")
 
   subject.asObservable()
-    .map {
-      return convert($0) ?? 0
+    .debug()
+    .map(convert)
+    .flatMap {
+      return $0 == nil ? Observable.empty() : Observable.just($0!)
     }
     .skipWhile { $0 == 0 }
     .take(10)
     .toArray()
+    .map(format)
+    .map(dial)
     .subscribe(onNext: {
-      print(dial(format($0)))
+      print($0)
     })
     .addDisposableTo(disposeBag)
 
-  //subject.onNext("603-555-1212")
+  //"603-555-1212"
 
-  let c = convert("a")
-  /*
-  subject.onNext("6")
-  subject.onNext("0")
-  subject.onNext("3")
-  subject.onNext("5")
-  subject.onNext("5")
-  subject.onNext("5")
-  subject.onNext("1")
-  subject.onNext("2")
-  subject.onNext("1")
-  subject.onNext("2")
- */
+  subject.value = "6"
+  subject.value = "0"
+  subject.value = "3"
+  subject.value = "5"
+  subject.value = "5"
+  subject.value = "5"
+  subject.value = "1"
+  subject.value = "b"
+  subject.value = "1"
+  subject.value = "a"
 }
 /*:
  Copyright (c) 2014-2016 Razeware LLC
