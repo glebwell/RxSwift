@@ -25,12 +25,20 @@ import RxSwift
 import RxCocoa
 import Kingfisher
 
+func cachedFileURL(_ filename: String) -> URL {
+  return FileManager.default
+    .urls(for: .cachesDirectory, in: .allDomainsMask)
+    .first!
+    .appendingPathComponent(filename)
+}
+
 class ActivityController: UITableViewController {
 
   let repo = "ReactiveX/RxSwift"
 
   fileprivate let events = Variable<[Event]>([])
   fileprivate let bag = DisposeBag()
+  private let eventsFileURL = cachedFileURL("events.plist")
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -44,6 +52,8 @@ class ActivityController: UITableViewController {
     refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
     refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
 
+    let eventsArray = (NSArray(contentsOf: eventsFileURL)) as? [[String: Any]] ?? []
+    events.value = eventsArray.flatMap(Event.init)
     refresh()
   }
 
@@ -52,7 +62,56 @@ class ActivityController: UITableViewController {
   }
 
   func fetchEvents(repo: String) {
+    let response = Observable.from([repo])
+      .map { urlString -> URL in
+        return URL(string: "https://api.github.com/repos/\(urlString)/events")!
+      }
+      .map { url -> URLRequest in
+        return URLRequest(url: url)
+      }
+      .flatMap { request -> Observable<(HTTPURLResponse, Data)> in
+        return URLSession.shared.rx.response(request: request)
+      }
+      .shareReplay(1)
 
+    response
+      .filter { response, _ in
+        return 200..<300 ~= response.statusCode
+      }
+      .map { _, data -> [[String: Any]] in
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
+          let result = jsonObject as? [[String: Any]] else {
+            return []
+        }
+        return result
+      }
+      .filter { objects in
+        return !objects.isEmpty
+      }
+      .map { objects in
+        return objects.flatMap(Event.init)
+      }
+      .subscribe(onNext: { [weak self] newEvents in
+        self?.processEvents(newEvents)
+      })
+      .addDisposableTo(bag)
+  }
+
+  func processEvents(_ newEvents: [Event]) {
+    var updatedEvents = newEvents + events.value
+    if updatedEvents.count > 50 {
+      updatedEvents = Array<Event>(updatedEvents.prefix(upTo: 50))
+    }
+
+    events.value = updatedEvents
+
+    DispatchQueue.main.async { [weak self] in
+      self?.tableView.reloadData()
+      self?.refreshControl?.endRefreshing()
+    }
+
+    let eventsArray = updatedEvents.map { $0.dictionary } as NSArray
+    eventsArray.write(to: eventsFileURL, atomically: true)
   }
 
   // MARK: - Table Data Source
