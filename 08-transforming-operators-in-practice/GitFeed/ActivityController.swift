@@ -69,9 +69,25 @@ class ActivityController: UITableViewController {
   }
 
   func fetchEvents(repo: String) {
-    let response = Observable.from([repo])
+    let response = Observable.from(["https://api.github.com/search/repositories?q=language:swift&per_page=5"])
+      .map { urlString -> URLRequest in
+        return URLRequest(url: URL(string: urlString)!)
+      }
+      .flatMap { request -> Observable<Any> in
+        return URLSession.shared.rx.json(request: request)
+      }
+      .flatMap { json -> Observable<String> in
+        guard let dict = json as? AnyDict, let items = dict["items"] as? [AnyDict]
+          else { return Observable.never() }
+
+        let repoNames = items.flatMap {
+          return $0["full_name"] as? String
+        }
+
+        return Observable.from(repoNames)
+      }
       .map { urlString -> URL in
-        return URL(string: "https://api.github.com/repos/\(urlString)/events")!
+        return URL(string: "https://api.github.com/repos/\(urlString)/events?per_page=5")!
       }
       .map { [weak self] url -> URLRequest in
         var request = URLRequest(url: url)
@@ -126,6 +142,15 @@ class ActivityController: UITableViewController {
                                   encoding: String.Encoding.utf8.rawValue)
       })
       .addDisposableTo(bag)
+
+    response
+      .filter { response, _ in
+        return response.statusCode >= 400
+      }
+      .subscribe { [weak self] _ in
+        self?.updateUI()
+      }
+      .addDisposableTo(bag)
   }
 
   func processEvents(_ newEvents: [Event]) {
@@ -136,13 +161,17 @@ class ActivityController: UITableViewController {
 
     events.value = updatedEvents
 
+    updateUI()
+
+    let eventsArray = updatedEvents.map { $0.dictionary } as NSArray
+    eventsArray.write(to: eventsFileURL, atomically: true)
+  }
+
+  private func updateUI() {
     DispatchQueue.main.async { [weak self] in
       self?.tableView.reloadData()
       self?.refreshControl?.endRefreshing()
     }
-    
-    let eventsArray = updatedEvents.map { $0.dictionary } as NSArray
-    eventsArray.write(to: eventsFileURL, atomically: true)
   }
 
   // MARK: - Table Data Source
