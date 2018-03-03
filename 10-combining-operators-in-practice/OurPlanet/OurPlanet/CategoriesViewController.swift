@@ -31,18 +31,28 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   let categories = Variable<[EOCategory]>([])
   let disposeBag = DisposeBag()
 
+  private lazy var activityIndicator: UIActivityIndicatorView = {
+    let view = UIActivityIndicatorView()
+    view.color = .black
+    let barButton = UIBarButtonItem(customView: view)
+    self.navigationItem.setRightBarButton(barButton, animated: true)
+    return view
+  }()
+
   override func viewDidLoad() {
     super.viewDidLoad()
 
     categories
       .asObservable()
-      .subscribe(onNext: { [weak self] _ in
+      .subscribe(onNext: { [weak self] data in
+        print(data)
         DispatchQueue.main.async {
           self?.tableView.reloadData()
         }
       })
       .addDisposableTo(disposeBag)
 
+    activityIndicator.startAnimating()
     startDownload()
   }
 
@@ -68,6 +78,11 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
         }
       }
     }
+    .do(onCompleted: { [weak self] in
+      DispatchQueue.main.async {
+        self?.activityIndicator.stopAnimating()
+      }
+    })
 
     eoCategories
       .concat(updatedCategories)
