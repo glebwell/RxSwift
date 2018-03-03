@@ -38,7 +38,7 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
       .asObservable()
       .subscribe(onNext: { [weak self] _ in
         DispatchQueue.main.async {
-          self?.tableView?.reloadData()
+          self?.tableView.reloadData()
         }
       })
       .addDisposableTo(disposeBag)
@@ -48,9 +48,31 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
 
   func startDownload() {
     let eoCategories = EONET.categories
-      eoCategories
-        .bindTo(categories)
-        .addDisposableTo(disposeBag)
+    let downloadedEvents = eoCategories.flatMap { categories in
+      return Observable.from(categories.map { category in
+        EONET.events(forLast: 360, category: category)
+      })
+    }
+    .merge()
+
+    let updatedCategories = eoCategories.flatMap { categories in
+      downloadedEvents.scan(categories) { updated, events in
+        return updated.map { category in
+          let eventsForCategory = EONET.filteredEvents(events: events, forCategory: category)
+          if !eventsForCategory.isEmpty {
+            var cat = category
+            cat.events = cat.events + eventsForCategory
+            return cat
+          }
+          return category
+        }
+      }
+    }
+
+    eoCategories
+      .concat(updatedCategories)
+      .bindTo(categories)
+      .addDisposableTo(disposeBag)
   }
   
   // MARK: UITableViewDataSource
@@ -61,10 +83,48 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell")!
     let category = categories.value[indexPath.row]
-    cell.textLabel?.text = category.name
+    cell.textLabel?.text = "\(category.name) (\(category.events.count))"
+    cell.accessoryType = category.events.isEmpty ? .none : .disclosureIndicator
     cell.detailTextLabel?.text = category.description
     return cell
   }
+
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    let category = categories.value[indexPath.row]
+    if !category.events.isEmpty {
+      let eventsController = storyboard!.instantiateViewController(withIdentifier: "events") as! EventsViewController
+      eventsController.title = category.name
+      eventsController.events.value = category.events
+      navigationController!.pushViewController(eventsController, animated: true)
+    }
+    tableView.deselectRow(at: indexPath, animated: true)
+  }
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
