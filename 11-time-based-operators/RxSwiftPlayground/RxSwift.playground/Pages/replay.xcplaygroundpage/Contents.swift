@@ -8,6 +8,7 @@ let maxElements = 10
 let replayedElements = 1
 let replayDelay: TimeInterval = 3
 
+/*
 let sourceObservable = Observable<Int>.create { observer in
   var value = 1
   let timer = DispatchSource.timer(interval: 1.0 / Double(elementsPerSecond), queue: .main) {
@@ -20,6 +21,10 @@ let sourceObservable = Observable<Int>.create { observer in
     timer.suspend()
   }
 }
+*/
+let sourceObservable = Observable<Int>
+  .interval(RxTimeInterval(elementsPerSecond), scheduler: MainScheduler.instance)
+  .map { $0 + 1 }
 //.replay(replayedElements)
 .replayAll()
 

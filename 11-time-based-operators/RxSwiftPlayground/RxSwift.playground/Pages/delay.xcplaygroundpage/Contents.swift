@@ -4,7 +4,7 @@ import RxSwift
 import RxCocoa
 
 let elementsPerSecond = 1
-let delayInSeconds = 1.5
+let delayInSeconds = 1
 
 let sourceObservable = PublishSubject<Int>()
 
@@ -25,8 +25,11 @@ let timer = DispatchSource.timer(interval: 1.0 / Double(elementsPerSecond), queu
 }
 
 _ = sourceObservable.subscribe(sourceTimeline)
-_ = sourceObservable
-  .delaySubscription(RxTimeInterval(delayInSeconds), scheduler: MainScheduler.instance)
+_ = Observable<Int>
+  .timer(1.5, scheduler: MainScheduler.instance)
+  .flatMap { _ in
+    sourceObservable.delay(RxTimeInterval(delayInSeconds), scheduler: MainScheduler.instance)
+  }
   .subscribe(delayedTimeline)
 
 let hostView = setupHostView()
