@@ -4,7 +4,7 @@ import RxSwift
 import RxCocoa
 
 let elementsPerSecond = 1
-let windowTimeSpan: RxTimeInterval = 4
+let windowTimeSpan: RxTimeInterval = 5
 let windowMaxCount = 5
 let sourceObservable = PublishSubject<String>()
 
@@ -22,12 +22,26 @@ let timer = DispatchSource.timer(interval: 1.0 / Double(elementsPerSecond), queu
 }
 
 _ = sourceObservable.subscribe(sourceTimeline)
-_ = sourceObservable.window(timeSpan: windowTimeSpan, count: windowMaxCount, scheduler: MainScheduler.instance)
-  .flatMap { windowedObservable -> Observable<(TimelineView<Int>, String?)> in
+
+let windowedObservable = sourceObservable.window(timeSpan: windowTimeSpan, count: windowMaxCount, scheduler: MainScheduler.instance)
+
+let timelineObservable = windowedObservable
+  .do(onNext: { _ in
     let timeline = TimelineView<Int>.make()
     stack.insert(timeline, at: 4)
     stack.keep(atMost: 8)
-    return windowedObservable
+  })
+  .map { _ in
+    stack.arrangedSubviews[4] as! TimelineView<Int>
+  }
+
+_ = Observable.zip(windowedObservable, timelineObservable) { obs, timeline in
+    return (obs, timeline)
+  }
+  .flatMap { tuple -> Observable<(TimelineView<Int>, String?)> in
+    let obs = tuple.0
+    let timeline = tuple.1
+    return obs
       .map { value in (timeline, value) }
       .concat(Observable.just((timeline, nil)))
   }
