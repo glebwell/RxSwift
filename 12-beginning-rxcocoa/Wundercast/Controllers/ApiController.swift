@@ -60,13 +60,15 @@ class ApiController {
   //MARK: - Api Calls
 
   func currentWeather(city: String) -> Observable<Weather> {
-    // Placeholder call
-//    return Observable.just(Weather(cityName: city,
-//                                   temperature: 20,
-//                                   humidity: 90,
-//                                   icon: iconNameToChar(icon: "01d")))
+    /* Placeholder call
+
+    return Observable.just(Weather(cityName: city,
+                                   temperature: 20,
+                                   humidity: 90,
+                                   icon: iconNameToChar(icon: "01d")))
+    */
     return buildRequest(pathComponent: "weather", params: [("q", city)])
-        .map{ json in
+        .map { json in
             return Weather(cityName: json["name"].string ?? "Unknown",
                            temperature: json["main"]["temp"].int ?? -1000,
                            humidity: json["main"]["humidity"].int ?? 0,
