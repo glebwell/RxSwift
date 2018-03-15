@@ -67,6 +67,7 @@ class ApiController {
                                    humidity: 90,
                                    icon: iconNameToChar(icon: "01d")))
     */
+    
     return buildRequest(pathComponent: "weather", params: [("q", city)])
         .map { json in
             return Weather(cityName: json["name"].string ?? "Unknown",

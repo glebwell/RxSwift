@@ -31,6 +31,7 @@ class ViewController: UIViewController {
   @IBOutlet weak var humidityLabel: UILabel!
   @IBOutlet weak var iconLabel: UILabel!
   @IBOutlet weak var cityNameLabel: UILabel!
+  @IBOutlet weak var tempSwitch: UISwitch!
     
   let bag = DisposeBag()
 
@@ -38,20 +39,29 @@ class ViewController: UIViewController {
     super.viewDidLoad()
     // Do any additional setup after loading the view, typically from a nib.
     style()
-    
+
+    /*
     ApiController.shared.currentWeather(city: "RxSwift")
-    .observeOn(MainScheduler.instance)
-    .subscribe(onNext: { weather in
-        self.tempLabel.text = "\(weather.temperature) C"
+      .observeOn(MainScheduler.instance)
+      .map {
+        return ApiController.Weather(cityName: $0.cityName,
+                                     temperature: self.convertToFahrenheit(celsius: $0.temperature),
+                                     humidity: $0.humidity,
+                                     icon: $0.icon)
+      }
+      .subscribe(onNext: { weather in
+        self.tempLabel.text = "\(weather.temperature)° F"
         self.iconLabel.text = "\(weather.icon)"
         self.humidityLabel.text = "\(weather.humidity)%"
         self.cityNameLabel.text = weather.cityName
-    })
-    .addDisposableTo(bag)
-
-    // Bind To
-    let search = searchCityName.rx.controlEvent(.editingDidEndOnExit)
-      .asObservable()
+      })
+      .addDisposableTo(bag)
+    */
+    let textSearch = searchCityName.rx.controlEvent(.editingDidEndOnExit).asObservable()
+    let textSwitch = tempSwitch.rx.controlEvent(.valueChanged).asObservable()
+    let search = Observable.from([textSearch, textSwitch])
+      .debug()
+      .merge()
       .map { self.searchCityName.text }
       .filter { ($0 ?? "").isEmpty == false }
       .flatMap { text in
@@ -60,7 +70,13 @@ class ViewController: UIViewController {
       }
       .asDriver(onErrorJustReturn: ApiController.Weather.empty)
 
-    search.map { "\($0.temperature) C" }
+    search.map {
+      if self.tempSwitch.isOn {
+        return "\(self.convertToFahrenheit(celsius: $0.temperature))° F"
+      } else {
+        return "\($0.temperature)° C"
+      }
+    }
       .drive(tempLabel.rx.text)
       .addDisposableTo(bag)
 
@@ -71,7 +87,7 @@ class ViewController: UIViewController {
     search.map { "\($0.humidity)%" }
       .drive(humidityLabel.rx.text)
       .addDisposableTo(bag)
-    
+
     search.map { "\($0.cityName)" }
       .drive(cityNameLabel.rx.text)
       .addDisposableTo(bag)
@@ -94,6 +110,11 @@ class ViewController: UIViewController {
   override func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     // Dispose of any resources that can be recreated.
+  }
+
+  private func convertToFahrenheit(celsius degrees: Int) -> Int
+  {
+    return Int(Double(degrees) * 1.8 + 32)
   }
 
   // MARK: - Style
