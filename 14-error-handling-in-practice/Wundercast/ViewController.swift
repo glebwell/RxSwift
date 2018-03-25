@@ -93,6 +93,10 @@ class ViewController: UIViewController {
           return ApiController.shared.apiKey
             .filter { !$0.isEmpty }
             .map { _ in return 1 }
+        } else if (error as NSError).code == -1009 {
+          return RxReachability.shared.status
+            .filter { $0 == .online }
+            .map { _ in return 1 }
         }
         print("== retrying after \(attempt + 1) seconds ==")
         return Observable<Int>.timer(Double(attempt + 1),
@@ -153,6 +157,9 @@ class ViewController: UIViewController {
     running.drive(iconLabel.rx.isHidden).addDisposableTo(bag)
     running.drive(humidityLabel.rx.isHidden).addDisposableTo(bag)
     running.drive(cityNameLabel.rx.isHidden).addDisposableTo(bag)
+
+    _ = RxReachability.shared.startMonitor("openweathermap.org")
+
 
   }
 
