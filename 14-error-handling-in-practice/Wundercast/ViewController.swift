@@ -42,6 +42,7 @@ class ViewController: UIViewController {
   let bag = DisposeBag()
 
   let locationManager = CLLocationManager()
+  var cache = [String: Weather]()
 
   var keyTextField: UITextField?
 
@@ -81,11 +82,43 @@ class ViewController: UIViewController {
 
     let searchInput = searchCityName.rx.controlEvent(.editingDidEndOnExit).asObservable()
       .map { self.searchCityName.text }
-      .filter { ($0 ?? "").characters.count > 0 }
+      .filter { !($0 ?? "").isEmpty }
 
+    let maxAttempts = 4
+    let retryHandler: (Observable<Error>) -> Observable<Int> = { e in
+      return e.flatMapWithIndex { (error, attempt) -> Observable<Int> in
+        if attempt >= maxAttempts - 1 {
+          return Observable.error(error)
+        } else if let casted = error as? ApiController.ApiError, casted == .invalidKey {
+          return ApiController.shared.apiKey
+            .filter { !$0.isEmpty }
+            .map { _ in return 1 }
+        }
+        print("== retrying after \(attempt + 1) seconds ==")
+        return Observable<Int>.timer(Double(attempt + 1),
+                                     scheduler: MainScheduler.instance).take(1)
+      }
+    }
     let textSearch = searchInput.flatMap { text in
       return ApiController.shared.currentWeather(city: text ?? "Error")
-        .catchErrorJustReturn(ApiController.Weather.empty)
+        .do(onNext: { data in
+          if let text = text {
+            self.cache[text] = data
+          }
+        }, onError: { [weak self] e in
+          guard let strongSelf = self else { return }
+          DispatchQueue.main.async {
+            strongSelf.showError(error: e)
+          }
+        })
+        .retryWhen(retryHandler)
+        .catchError { error in
+          if let text = text, let cachedData = self.cache[text] {
+            return Observable.just(cachedData)
+          } else {
+            return Observable.just(ApiController.Weather.empty)
+          }
+        }
     }
 
     let search = Observable.from([geoSearch, textSearch])
@@ -121,6 +154,23 @@ class ViewController: UIViewController {
     running.drive(humidityLabel.rx.isHidden).addDisposableTo(bag)
     running.drive(cityNameLabel.rx.isHidden).addDisposableTo(bag)
 
+  }
+
+  func showError(error e: Error) {
+    var message = ""
+    if let e = e as? ApiController.ApiError {
+      switch (e) {
+      case .cityNotFound:
+        message = "City name is invalid"
+      case .serverFailure:
+        message = "Server error"
+      case .invalidKey:
+        message = "Key is invalid"
+      }
+    } else {
+      message = "An error occured"
+    }
+    InfoView.showIn(viewController: self, message: message)
   }
 
   override func viewDidAppear(_ animated: Bool) {
