@@ -73,21 +73,38 @@ class TestingOperators : XCTestCase {
 
     XCTAssertEqual(results, ["1)", "2)", "3)"])
   }
+
+  func testFilter() {
+    let observer = scheduler.createObserver(Int.self)
+
+    let observable = scheduler.createHotObservable([
+      next(100, 1),
+      next(200, 2),
+      next(300, 3),
+      next(400, 2),
+      next(500, 1)
+      ])
+
+    let filterObservable = observable.filter { $0 < 3 }
+
+    scheduler.scheduleAt(0) {
+      self.subscription = filterObservable.subscribe(observer)
+    }
+
+    scheduler.start()
+
+    let results = observer.events.map {
+      $0.value.element!
+    }
+
+    XCTAssertEqual(results, [1, 2, 2, 1])
+  }
+
+  func testToArray() {
+    let scheduler = ConcurrentDispatchQueueScheduler(qos: .default)
+
+    let toArrayObservable = Observable.of("1)", "2)").subscribeOn(scheduler)
+
+    XCTAssertEqual(try! toArrayObservable.toBlocking().toArray(), ["1)", "2)"])
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

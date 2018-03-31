@@ -34,7 +34,7 @@ class ViewModel {
   init() {
     color = hexString.asObservable()
       .map { hex in
-        guard hex.characters.count == 7 else { return .clear }
+        guard hex.count == 7 else { return .clear }
         let color = UIColor(hex: hex)
         return color
       }
@@ -54,7 +54,7 @@ class ViewModel {
 
     colorName = hexString.asObservable()
       .map { hexString in
-        let hex = String(hexString.characters.dropFirst())
+        let hex = String(hexString.dropFirst())
 
         if let color = ColorName(rawValue: hex) {
           return "\(color)"

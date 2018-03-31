@@ -17,6 +17,10 @@
 		D2E76B7A1DF481EC000BA843 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D2E76B781DF481EC000BA843 /* LaunchScreen.storyboard */; };
 		D2E76B851DF481ED000BA843 /* TestingOperators.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E76B841DF481ED000BA843 /* TestingOperators.swift */; };
 		EF3B6D50EFBAC140650650AF /* Pods_Testing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FB7B08AD32F7C4A8FCF0770 /* Pods_Testing.framework */; };
+		F720C7E120700E0600731939 /* RxTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F720C7E220700E0600731939 /* RxTest.framework */; };
+		F720C7E320700E1200731939 /* RxBlocking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F720C7E420700E1200731939 /* RxBlocking.framework */; };
+		F720C7E520700E1800731939 /* RxCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F720C7E620700E1800731939 /* RxCocoa.framework */; };
+		F720C7E720700E2300731939 /* RxSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F720C7E820700E2300731939 /* RxSwift.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +51,10 @@
 		D2E76B861DF481ED000BA843 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D407631A34FFA304B91C1409 /* Pods-TestingTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TestingTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TestingTests/Pods-TestingTests.debug.xcconfig"; sourceTree = "<group>"; };
 		F600FACE59FFC1D94F8FBDF5 /* Pods_TestingTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TestingTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F720C7E220700E0600731939 /* RxTest.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RxTest.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F720C7E420700E1200731939 /* RxBlocking.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RxBlocking.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F720C7E620700E1800731939 /* RxCocoa.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RxCocoa.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F720C7E820700E2300731939 /* RxSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RxSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F84D3B13B6C8459C715A9A0B /* Pods-TestingTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TestingTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-TestingTests/Pods-TestingTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -63,6 +71,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F720C7E720700E2300731939 /* RxSwift.framework in Frameworks */,
+				F720C7E520700E1800731939 /* RxCocoa.framework in Frameworks */,
+				F720C7E320700E1200731939 /* RxBlocking.framework in Frameworks */,
+				F720C7E120700E0600731939 /* RxTest.framework in Frameworks */,
 				96206FE50D1A124AAA79AB70 /* Pods_TestingTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -73,6 +85,10 @@
 		421D4098F23B4DB839746575 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F720C7E820700E2300731939 /* RxSwift.framework */,
+				F720C7E620700E1800731939 /* RxCocoa.framework */,
+				F720C7E420700E1200731939 /* RxBlocking.framework */,
+				F720C7E220700E0600731939 /* RxTest.framework */,
 				4FB7B08AD32F7C4A8FCF0770 /* Pods_Testing.framework */,
 				F600FACE59FFC1D94F8FBDF5 /* Pods_TestingTests.framework */,
 			);
