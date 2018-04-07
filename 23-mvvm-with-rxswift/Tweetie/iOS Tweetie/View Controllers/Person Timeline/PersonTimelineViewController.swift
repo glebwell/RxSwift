@@ -53,8 +53,18 @@ class PersonTimelineViewController: UIViewController {
 
   func bindUI() {
     //bind the title
+    let username = viewModel.username
+    viewModel.tweets
+      .map { $0.isEmpty ? "None found" : username }
+      .drive(rx.title)
+      .addDisposableTo(bag)
     //configure an animated table data source
+    let dataSource = crateTweetsDataSource()
     //bind the tweets to the table view
+    viewModel.tweets
+      .map { [TweetSection(model: "Tweets", items: $0)] }
+      .drive(tableView.rx.items(dataSource: dataSource))
+      .addDisposableTo(bag)
   }
 
   private func crateTweetsDataSource() -> RxTableViewSectionedAnimatedDataSource<TweetSection> {

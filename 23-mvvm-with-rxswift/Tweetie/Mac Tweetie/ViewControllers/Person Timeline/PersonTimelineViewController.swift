@@ -51,7 +51,17 @@ class PersonTimelineViewController: NSViewController {
 
   func bindUI() {
     //bind the window title
+    let title = "@\(viewModel.username)"
+    viewModel.tweets
+      .drive(onNext: { NSApp.windows.first?.title = $0.isEmpty ? "None Found" : title })
+      .addDisposableTo(bag)
     //reload the table when tweets come in
+    viewModel.tweets
+      .drive(onNext: { [weak self] tweets in
+        self?.tweets = tweets
+        self?.tableView.reloadData()
+      })
+      .addDisposableTo(bag)
   }
 }
 

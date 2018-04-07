@@ -55,6 +55,10 @@ class ListPeopleViewController: NSViewController {
       .addDisposableTo(bag)
 
     //show message when no account available
+    viewModel.people.asDriver()
+      .map { $0 == nil ? false : !$0!.isEmpty }
+      .drive(messageView.rx.isHidden)
+      .addDisposableTo(bag)
   }
 
   @IBAction func tableViewDidSelectRow(sender: NSTableView) {
