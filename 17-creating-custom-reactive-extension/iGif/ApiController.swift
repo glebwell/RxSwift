@@ -28,7 +28,7 @@ class ApiController {
   
   static let shared = ApiController()
   
-  private let apiKey = "[YOUR KEY]"
+  private let apiKey = "dc6zaTOxFJmzC"
   
   func search(text: String) -> Observable<[JSON]> {
     let url = URL(string: "http://api.giphy.com/v1/gifs/search")!
@@ -44,6 +44,8 @@ class ApiController {
     
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     
-    return Observable.just([])
+    return URLSession.shared.rx.json(request: request).map { json in
+      return json["data"].array ?? []
+    }
   }
 }
