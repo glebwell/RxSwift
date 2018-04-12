@@ -36,6 +36,19 @@ struct TasksViewModel {
     self.sceneCoordinator = coordinator
   }
 
+  func onCreateTask() -> CocoaAction {
+    return CocoaAction {
+      return self.taskService
+        .createTask(title: "")
+        .flatMap { task -> Observable<Void> in
+          let editViewModel = EditTaskViewModel(task: task,
+                                                coordinator: self.sceneCoordinator,
+                                                updateAction: self.onUpdateTitle(task: task),
+                                                cancelAction: self.onDelete(task: task))
+          return self.sceneCoordinator.transition(to: Scene.editTask(editViewModel), type: .modal)
+        }
+    }
+  }
   func onToggle(task: TaskItem) -> CocoaAction {
     return CocoaAction {
       return self.taskService.toggle(task: task).map { _ in }
