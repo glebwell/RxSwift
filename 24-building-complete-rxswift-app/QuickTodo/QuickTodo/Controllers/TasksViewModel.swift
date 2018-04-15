@@ -40,6 +40,14 @@ struct TasksViewModel {
     }
   }(self)
 
+  lazy var deleteAction: Action<TaskItem, Void> = { this in
+    return Action { task in
+      return this.taskService.delete(task: task)
+    }
+  }(self)
+
+  lazy var tasksStatictics: Observable<TaskStatistics> = self.taskService.tasksStatistics()
+
   init(taskService: TaskServiceType, coordinator: SceneCoordinatorType) {
     self.taskService = taskService
     self.sceneCoordinator = coordinator
@@ -94,18 +102,3 @@ struct TasksViewModel {
       }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -107,10 +107,17 @@ struct TaskService: TaskServiceType {
 
   func tasks() -> Observable<Results<TaskItem>> {
     let result = withRealm("getting tasks") { realm -> Observable<Results<TaskItem>> in
-      let realm = try Realm()
       let tasks = realm.objects(TaskItem.self)
-      return Observable.collection(from: tasks)
+      return Observable.collection(from: tasks).shareReplay(1)
     }
     return result ?? .empty()
+  }
+
+  func tasksStatistics() -> Observable<TaskStatistics> {
+    return tasks()
+      .map { results -> TaskStatistics in
+        return TaskStatistics(todo: results.filter("checked == nil").count,
+                              done: results.filter("checked != nil").count)
+      }
   }
 }
